@@ -3,15 +3,17 @@ package com.gms.dto.request;
 import com.gms.enums.TicketStatus;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.List;
 
 @Data
 public class MainTicketRequest {
 
-    @NotBlank(message = "Ticket number is required")
+    // Ticket number is auto-generated, not required from user
     private String ticketNumber;
 
     @NotNull(message = "Generator ID is required")
@@ -31,4 +33,8 @@ public class MainTicketRequest {
 
     @NotNull(message = "Scheduled time is required")
     private LocalTime scheduledTime;
+
+    @NotNull(message = "At least one employee must be assigned")
+    @Size(min = 1, max = 5, message = "Must assign between 1 and 5 employees")
+    private List<Long> employeeIds;
 }

@@ -7,6 +7,7 @@ import lombok.Data;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.List;
 
 @Data
 @Builder
@@ -25,4 +26,7 @@ public class MainTicketResponse {
     private Long createdById;
     private String createdByName;
     private LocalDateTime createdAt;
+    private List<SubTicketResponse> subTickets;
+    private Integer totalAssignments;
+    private Integer completedAssignments;
 }
