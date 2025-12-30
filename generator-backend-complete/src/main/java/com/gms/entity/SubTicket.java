@@ -52,6 +52,31 @@ public class SubTicket {
     @Column(columnDefinition = "TEXT")
     private String notes;
 
+    // Scoring system
+    @Column(name = "completion_factor")
+    private Double completionFactor; // 0.0 to 1.0
+
+    @Column(name = "quality_factor")
+    private Double qualityFactor; // 0.0 to 1.0
+
+    @Column(name = "score")
+    private Double score; // Calculated: weight × completionFactor × qualityFactor
+
+    // Approval flow
+    @Column(name = "approved")
+    @Builder.Default
+    private Boolean approved = false;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "approved_by")
+    private User approvedBy;
+
+    @Column(name = "approved_at")
+    private LocalDateTime approvedAt;
+
+    @Column(name = "admin_review_notes", columnDefinition = "TEXT")
+    private String adminReviewNotes;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -59,4 +84,7 @@ public class SubTicket {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Column(name = "completed_at")
+    private LocalDateTime completedAt;
 }

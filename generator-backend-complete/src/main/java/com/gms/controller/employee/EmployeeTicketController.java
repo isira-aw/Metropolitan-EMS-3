@@ -12,6 +12,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -76,7 +77,18 @@ public class EmployeeTicketController {
             throw new IllegalArgumentException("You are not authorized to update this ticket");
         }
 
+        // Prevent changing status if already approved or rejected
+        if (subTicket.getStatus() == TicketStatus.APPROVED || subTicket.getStatus() == TicketStatus.REJECTED) {
+            throw new IllegalArgumentException("Cannot change status of approved or rejected tickets");
+        }
+
         subTicket.setStatus(status);
+
+        // Set completedAt timestamp when marking as COMPLETED
+        if (status == TicketStatus.COMPLETED) {
+            subTicket.setCompletedAt(LocalDateTime.now());
+        }
+
         SubTicket updatedTicket = subTicketRepository.save(subTicket);
 
         return ResponseEntity.ok(toResponse(updatedTicket));
@@ -112,18 +124,33 @@ public class EmployeeTicketController {
     }
 
     private SubTicketResponse toResponse(SubTicket subTicket) {
-        return SubTicketResponse.builder()
+        SubTicketResponse.SubTicketResponseBuilder builder = SubTicketResponse.builder()
             .id(subTicket.getId())
             .ticketNumber(subTicket.getTicketNumber())
             .mainTicketId(subTicket.getMainTicket().getId())
             .mainTicketNumber(subTicket.getMainTicket().getTicketNumber())
+            .mainTicketWeight(subTicket.getMainTicket().getWeight())
             .employeeId(subTicket.getEmployee().getId())
             .employeeName(subTicket.getEmployee().getFullName())
             .employeeEmail(subTicket.getEmployee().getEmail())
             .status(subTicket.getStatus())
             .notes(subTicket.getNotes())
+            .completionFactor(subTicket.getCompletionFactor())
+            .qualityFactor(subTicket.getQualityFactor())
+            .score(subTicket.getScore())
+            .approved(subTicket.getApproved())
+            .adminReviewNotes(subTicket.getAdminReviewNotes())
             .createdAt(subTicket.getCreatedAt())
             .updatedAt(subTicket.getUpdatedAt())
-            .build();
+            .completedAt(subTicket.getCompletedAt());
+
+        if (subTicket.getApprovedBy() != null) {
+            builder.approvedById(subTicket.getApprovedBy().getId())
+                   .approvedByName(subTicket.getApprovedBy().getFullName());
+        }
+
+        builder.approvedAt(subTicket.getApprovedAt());
+
+        return builder.build();
     }
 }

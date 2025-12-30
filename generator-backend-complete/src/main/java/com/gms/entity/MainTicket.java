@@ -44,9 +44,10 @@ public class MainTicket {
     
     @Column(columnDefinition = "TEXT")
     private String description;
-    
-    @Column(length = 10)
-    private String weight;
+
+    @NotNull(message = "Weight is required")
+    @Column(nullable = false)
+    private Integer weight; // 1-5 stars (* to *****)
     
     @NotNull(message = "Status is required")
     @Enumerated(EnumType.STRING)

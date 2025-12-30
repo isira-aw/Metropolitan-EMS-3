@@ -36,4 +36,11 @@ public interface SubTicketRepository extends JpaRepository<SubTicket, Long> {
 
     @Query("SELECT COUNT(st) FROM SubTicket st WHERE st.mainTicket.id = :mainTicketId AND st.status = :status")
     long countByMainTicketIdAndStatus(@Param("mainTicketId") Long mainTicketId, @Param("status") TicketStatus status);
+
+    @Query("SELECT st FROM SubTicket st " +
+           "LEFT JOIN FETCH st.mainTicket mt " +
+           "LEFT JOIN FETCH mt.generator " +
+           "LEFT JOIN FETCH st.employee " +
+           "WHERE st.status = :status")
+    List<SubTicket> findByStatus(@Param("status") TicketStatus status);
 }

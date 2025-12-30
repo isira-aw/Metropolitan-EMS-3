@@ -24,7 +24,10 @@ public class MainTicketRequest {
 
     private String description;
 
-    private String weight;
+    @NotNull(message = "Weight is required")
+    @jakarta.validation.constraints.Min(value = 1, message = "Weight must be between 1 and 5")
+    @jakarta.validation.constraints.Max(value = 5, message = "Weight must be between 1 and 5")
+    private Integer weight; // 1=*, 2=**, 3=***, 4=****, 5=*****
 
     private TicketStatus status;
 

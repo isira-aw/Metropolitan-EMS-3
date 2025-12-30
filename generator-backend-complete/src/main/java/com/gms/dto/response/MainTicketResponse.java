@@ -19,7 +19,8 @@ public class MainTicketResponse {
     private String generatorModel;
     private String title;
     private String description;
-    private String weight;
+    private Integer weight; // 1-5 stars (* to *****)
+    private String weightDisplay; // Display as stars: "*****"
     private TicketStatus status;
     private LocalDate scheduledDate;
     private LocalTime scheduledTime;

@@ -1,5 +1,6 @@
 package com.gms.controller.admin;
 
+import com.gms.dto.request.ApprovalRequest;
 import com.gms.dto.request.MainTicketRequest;
 import com.gms.dto.response.MainTicketResponse;
 import com.gms.dto.response.SubTicketResponse;
@@ -28,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -258,6 +260,7 @@ public class AdminTicketController {
             .title(ticket.getTitle())
             .description(ticket.getDescription())
             .weight(ticket.getWeight())
+            .weightDisplay(convertWeightToStars(ticket.getWeight()))
             .status(ticket.getStatus())
             .scheduledDate(ticket.getScheduledDate())
             .scheduledTime(ticket.getScheduledTime())
@@ -270,19 +273,110 @@ public class AdminTicketController {
             .build();
     }
 
+    private String convertWeightToStars(Integer weight) {
+        if (weight == null || weight < 1 || weight > 5) {
+            return "";
+        }
+        return "*".repeat(weight);
+    }
+
     private SubTicketResponse toSubTicketResponse(SubTicket subTicket) {
-        return SubTicketResponse.builder()
+        SubTicketResponse.SubTicketResponseBuilder builder = SubTicketResponse.builder()
             .id(subTicket.getId())
             .ticketNumber(subTicket.getTicketNumber())
             .mainTicketId(subTicket.getMainTicket().getId())
             .mainTicketNumber(subTicket.getMainTicket().getTicketNumber())
+            .mainTicketWeight(subTicket.getMainTicket().getWeight())
             .employeeId(subTicket.getEmployee().getId())
             .employeeName(subTicket.getEmployee().getFullName())
             .employeeEmail(subTicket.getEmployee().getEmail())
             .status(subTicket.getStatus())
             .notes(subTicket.getNotes())
+            .completionFactor(subTicket.getCompletionFactor())
+            .qualityFactor(subTicket.getQualityFactor())
+            .score(subTicket.getScore())
+            .approved(subTicket.getApproved())
+            .adminReviewNotes(subTicket.getAdminReviewNotes())
             .createdAt(subTicket.getCreatedAt())
             .updatedAt(subTicket.getUpdatedAt())
-            .build();
+            .completedAt(subTicket.getCompletedAt());
+
+        if (subTicket.getApprovedBy() != null) {
+            builder.approvedById(subTicket.getApprovedBy().getId())
+                   .approvedByName(subTicket.getApprovedBy().getFullName());
+        }
+
+        builder.approvedAt(subTicket.getApprovedAt());
+
+        return builder.build();
+    }
+
+    /**
+     * Approve or reject a sub-ticket and calculate score
+     */
+    @PostMapping("/sub-tickets/{subTicketId}/approve")
+    @Transactional
+    public ResponseEntity<SubTicketResponse> approveSubTicket(
+            @PathVariable Long subTicketId,
+            @Valid @RequestBody ApprovalRequest request) {
+
+        SubTicket subTicket = subTicketRepository.findByIdWithDetails(subTicketId)
+            .orElseThrow(() -> new ResourceNotFoundException("Sub-ticket not found"));
+
+        // Verify sub-ticket is completed
+        if (subTicket.getStatus() != TicketStatus.COMPLETED && subTicket.getStatus() != TicketStatus.PENDING_APPROVAL) {
+            throw new IllegalArgumentException("Sub-ticket must be completed before approval");
+        }
+
+        // Get current admin user
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+        User admin = userRepository.findById(userPrincipal.getId())
+            .orElseThrow(() -> new ResourceNotFoundException("Admin user not found"));
+
+        if (request.getApproved()) {
+            // Approve the work
+            subTicket.setStatus(TicketStatus.APPROVED);
+            subTicket.setApproved(true);
+
+            // Set scoring factors (default to 1.0 if not provided)
+            double completionFactor = request.getCompletionFactor() != null ? request.getCompletionFactor() : 1.0;
+            double qualityFactor = request.getQualityFactor() != null ? request.getQualityFactor() : 1.0;
+
+            subTicket.setCompletionFactor(completionFactor);
+            subTicket.setQualityFactor(qualityFactor);
+
+            // Calculate score: weight × completionFactor × qualityFactor
+            Integer weight = subTicket.getMainTicket().getWeight();
+            double score = weight * completionFactor * qualityFactor;
+            subTicket.setScore(score);
+
+        } else {
+            // Reject the work
+            subTicket.setStatus(TicketStatus.REJECTED);
+            subTicket.setApproved(false);
+        }
+
+        subTicket.setApprovedBy(admin);
+        subTicket.setApprovedAt(LocalDateTime.now());
+        subTicket.setAdminReviewNotes(request.getAdminReviewNotes());
+
+        SubTicket savedSubTicket = subTicketRepository.save(subTicket);
+
+        return ResponseEntity.ok(toSubTicketResponse(savedSubTicket));
+    }
+
+    /**
+     * Get all sub-tickets pending approval
+     */
+    @GetMapping("/sub-tickets/pending-approval")
+    public ResponseEntity<List<SubTicketResponse>> getPendingApprovals() {
+        List<SubTicket> pendingTickets = subTicketRepository.findByStatus(TicketStatus.COMPLETED);
+
+        List<SubTicketResponse> response = pendingTickets.stream()
+            .map(this::toSubTicketResponse)
+            .collect(Collectors.toList());
+
+        return ResponseEntity.ok(response);
     }
 }
