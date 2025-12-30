@@ -43,4 +43,9 @@ public interface SubTicketRepository extends JpaRepository<SubTicket, Long> {
            "LEFT JOIN FETCH st.employee " +
            "WHERE st.status = :status")
     List<SubTicket> findByStatus(@Param("status") TicketStatus status);
+
+    @Query("SELECT COALESCE(MAX(CAST(SUBSTRING(st.ticketNumber, LENGTH(st.ticketNumber) - 1) AS int)), 0) " +
+           "FROM SubTicket st " +
+           "WHERE st.mainTicket.ticketNumber = :mainTicketNumber")
+    Integer findMaxSubTicketSequenceForMainTicket(@Param("mainTicketNumber") String mainTicketNumber);
 }

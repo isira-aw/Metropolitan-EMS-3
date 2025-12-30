@@ -119,7 +119,10 @@ public class AdminTicketController {
         MainTicket savedTicket = ticketRepository.save(ticket);
 
         // Create sub-tickets for each assigned employee
-        int subTicketCounter = 1;
+        // Get the next available sub-ticket sequence number to prevent duplicates
+        Integer maxSequence = subTicketRepository.findMaxSubTicketSequenceForMainTicket(ticketNumber);
+        int subTicketCounter = (maxSequence != null ? maxSequence : 0) + 1;
+
         for (User employee : employees) {
             String subTicketNumber = ticketNumber + "-" + String.format("%02d", subTicketCounter++);
 
@@ -187,7 +190,10 @@ public class AdminTicketController {
             subTicketRepository.deleteAll(existingSubTickets);
 
             // Create new sub-tickets
-            int subTicketCounter = 1;
+            // Get the next available sub-ticket sequence number to prevent duplicates
+            Integer maxSequence = subTicketRepository.findMaxSubTicketSequenceForMainTicket(ticket.getTicketNumber());
+            int subTicketCounter = (maxSequence != null ? maxSequence : 0) + 1;
+
             for (User employee : employees) {
                 String subTicketNumber = ticket.getTicketNumber() + "-" + String.format("%02d", subTicketCounter++);
 

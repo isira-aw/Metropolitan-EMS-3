@@ -10,6 +10,8 @@ import java.util.List;
 public interface MiniJobCardRepository extends JpaRepository<MiniJobCard, Long> {
     Page<MiniJobCard> findByEmployeeId(Long employeeId, Pageable pageable);
     Page<MiniJobCard> findByEmployeeIdAndStatus(Long employeeId, JobStatus status, Pageable pageable);
+    Page<MiniJobCard> findByStatus(JobStatus status, Pageable pageable);
     List<MiniJobCard> findByMainTicketId(Long mainTicketId);
     List<MiniJobCard> findByEmployeeIdAndCreatedAtBetween(Long employeeId, LocalDateTime start, LocalDateTime end);
+    List<MiniJobCard> findByStatusAndApproved(JobStatus status, Boolean approved);
 }
