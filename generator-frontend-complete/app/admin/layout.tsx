@@ -5,7 +5,7 @@ import { getFullName, getRole, getUserId, clearAuthData } from '@/lib/auth';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Users, Box, FileText, LogOut } from 'lucide-react';
+import { LayoutDashboard, Users, Box, FileText, BarChart3, LogOut } from 'lucide-react';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -40,6 +40,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: '/admin/users', icon: Users, label: 'Users' },
     { href: '/admin/generators', icon: Box, label: 'Generators' },
     { href: '/admin/tickets', icon: FileText, label: 'Tickets' },
+    { href: '/admin/reports', icon: BarChart3, label: 'Reports' },
   ];
 
   if (loading) return <div>Loading...</div>;

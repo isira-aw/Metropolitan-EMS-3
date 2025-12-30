@@ -2,7 +2,8 @@
 import { useEffect, useState } from 'react';
 import { adminTicketAPI, adminGeneratorAPI, adminUserAPI } from '@/lib/api';
 import { Ticket, Generator, User } from '@/types';
-import { Plus, Edit, Trash2, X, Calendar, Clock, Star, Users } from 'lucide-react';
+import { JobCardType } from '@/types/ticket';
+import { Plus, Edit, Trash2, X, Calendar, Clock, Star, Users, Briefcase } from 'lucide-react';
 
 export default function TicketsPage() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
@@ -15,6 +16,7 @@ export default function TicketsPage() {
     generatorId: '',
     title: '',
     description: '',
+    jobCardType: 'SERVICE' as JobCardType,
     weight: 3, // Default to 3 stars
     scheduledDate: '',
     scheduledTime: '',
@@ -62,6 +64,7 @@ export default function TicketsPage() {
       generatorId: '',
       title: '',
       description: '',
+      jobCardType: 'SERVICE' as JobCardType,
       weight: 3,
       scheduledDate: '',
       scheduledTime: '',
@@ -77,6 +80,7 @@ export default function TicketsPage() {
       generatorId: ticket.generatorId.toString(),
       title: ticket.title,
       description: ticket.description || '',
+      jobCardType: ticket.jobCardType || 'SERVICE',
       weight: ticket.weight,
       scheduledDate: ticket.scheduledDate,
       scheduledTime: ticket.scheduledTime,
@@ -203,6 +207,11 @@ export default function TicketsPage() {
                 {ticket.description && <p><strong>Description:</strong> {ticket.description}</p>}
 
                 <div className="flex items-center space-x-2">
+                  <Briefcase className="w-4 h-4 text-purple-500" />
+                  <span><strong>Type:</strong> {ticket.jobCardType}</span>
+                </div>
+
+                <div className="flex items-center space-x-2">
                   <Star className="w-4 h-4 text-yellow-500" />
                   <span><strong>Weight:</strong> {renderStars(ticket.weight)}</span>
                 </div>
@@ -286,6 +295,25 @@ export default function TicketsPage() {
                   className="input-field"
                   rows={3}
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold mb-2">Job Card Type *</label>
+                <select
+                  value={formData.jobCardType}
+                  onChange={(e) => setFormData({ ...formData, jobCardType: e.target.value as JobCardType })}
+                  className="input-field"
+                  required
+                >
+                  <option value="SERVICE">🔧 Service</option>
+                  <option value="REPAIR">🔨 Repair</option>
+                  <option value="MAINTENANCE">⚙️ Maintenance</option>
+                  <option value="VISIT">👁️ Visit</option>
+                  <option value="EMERGENCY">🚨 Emergency</option>
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  Classify the type of work to be performed
+                </p>
               </div>
 
               <div>
