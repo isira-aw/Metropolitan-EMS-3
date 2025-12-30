@@ -1,28 +1,30 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { adminTicketAPI, adminGeneratorAPI } from '@/lib/api';
-import { Ticket, Generator } from '@/types';
-import { Plus, Edit, Trash2, X, Calendar, Clock } from 'lucide-react';
+import { adminTicketAPI, adminGeneratorAPI, adminUserAPI } from '@/lib/api';
+import { Ticket, Generator, User } from '@/types';
+import { Plus, Edit, Trash2, X, Calendar, Clock, Star, Users } from 'lucide-react';
 
 export default function TicketsPage() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [generators, setGenerators] = useState<Generator[]>([]);
+  const [employees, setEmployees] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingTicket, setEditingTicket] = useState<Ticket | null>(null);
   const [formData, setFormData] = useState({
-    ticketNumber: '',
     generatorId: '',
     title: '',
     description: '',
-    weight: '',
+    weight: 3, // Default to 3 stars
     scheduledDate: '',
     scheduledTime: '',
+    employeeIds: [] as number[],
   });
 
   useEffect(() => {
     loadTickets();
     loadGenerators();
+    loadEmployees();
   }, []);
 
   const loadTickets = async () => {
@@ -45,40 +47,62 @@ export default function TicketsPage() {
     }
   };
 
+  const loadEmployees = async () => {
+    try {
+      const response = await adminUserAPI.getAll(0, 100, 'EMPLOYEE');
+      setEmployees(response.data.content);
+    } catch (error) {
+      console.error('Failed to load employees:', error);
+    }
+  };
+
   const handleCreate = () => {
     setEditingTicket(null);
     setFormData({
-      ticketNumber: '',
       generatorId: '',
       title: '',
       description: '',
-      weight: '',
+      weight: 3,
       scheduledDate: '',
       scheduledTime: '',
+      employeeIds: [],
     });
     setShowModal(true);
   };
 
   const handleEdit = (ticket: Ticket) => {
     setEditingTicket(ticket);
+    const employeeIds = ticket.subTickets?.map(st => st.employeeId) || [];
     setFormData({
-      ticketNumber: ticket.ticketNumber,
       generatorId: ticket.generatorId.toString(),
       title: ticket.title,
       description: ticket.description || '',
-      weight: ticket.weight || '',
+      weight: ticket.weight,
       scheduledDate: ticket.scheduledDate,
       scheduledTime: ticket.scheduledTime,
+      employeeIds,
     });
     setShowModal(true);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate employeeIds
+    if (formData.employeeIds.length === 0) {
+      alert('Please assign at least one employee (1-5 employees required)');
+      return;
+    }
+    if (formData.employeeIds.length > 5) {
+      alert('You can assign a maximum of 5 employees');
+      return;
+    }
+
     try {
       const submitData = {
         ...formData,
         generatorId: parseInt(formData.generatorId),
+        weight: parseInt(formData.weight as any),
       };
 
       if (editingTicket) {
@@ -91,6 +115,25 @@ export default function TicketsPage() {
     } catch (err: any) {
       alert(err.response?.data?.message || 'Operation failed');
     }
+  };
+
+  const toggleEmployee = (employeeId: number) => {
+    setFormData(prev => {
+      const isSelected = prev.employeeIds.includes(employeeId);
+      if (isSelected) {
+        return { ...prev, employeeIds: prev.employeeIds.filter(id => id !== employeeId) };
+      } else {
+        if (prev.employeeIds.length >= 5) {
+          alert('Maximum 5 employees can be assigned');
+          return prev;
+        }
+        return { ...prev, employeeIds: [...prev.employeeIds, employeeId] };
+      }
+    });
+  };
+
+  const renderStars = (weight: number) => {
+    return '⭐'.repeat(weight);
   };
 
   const handleDelete = async (id: number) => {
@@ -107,7 +150,12 @@ export default function TicketsPage() {
     const colors = {
       CREATED: 'bg-blue-100 text-blue-800',
       ASSIGNED: 'bg-yellow-100 text-yellow-800',
-      CLOSED: 'bg-green-100 text-green-800',
+      IN_PROGRESS: 'bg-purple-100 text-purple-800',
+      COMPLETED: 'bg-indigo-100 text-indigo-800',
+      PENDING_APPROVAL: 'bg-orange-100 text-orange-800',
+      APPROVED: 'bg-green-100 text-green-800',
+      REJECTED: 'bg-red-100 text-red-800',
+      CLOSED: 'bg-gray-100 text-gray-800',
     };
     return colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800';
   };
@@ -153,7 +201,24 @@ export default function TicketsPage() {
               <div className="space-y-2 text-sm">
                 <p><strong>Generator:</strong> {ticket.generatorName} ({ticket.generatorModel})</p>
                 {ticket.description && <p><strong>Description:</strong> {ticket.description}</p>}
-                {ticket.weight && <p><strong>Weight:</strong> {ticket.weight}</p>}
+
+                <div className="flex items-center space-x-2">
+                  <Star className="w-4 h-4 text-yellow-500" />
+                  <span><strong>Weight:</strong> {renderStars(ticket.weight)}</span>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Users className="w-4 h-4 text-blue-500" />
+                  <span><strong>Assigned:</strong> {ticket.totalAssignments || 0} employee(s)</span>
+                </div>
+
+                {ticket.totalAssignments && ticket.completedAssignments !== undefined && (
+                  <div className="text-xs">
+                    <span className="text-green-600">{ticket.completedAssignments} completed</span>
+                    {' / '}
+                    <span>{ticket.totalAssignments} total</span>
+                  </div>
+                )}
 
                 <div className="flex items-center space-x-2 text-gray-600">
                   <Calendar className="w-4 h-4" />
@@ -181,15 +246,8 @@ export default function TicketsPage() {
               </button>
             </div>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-bold mb-2">Ticket Number *</label>
-                <input
-                  type="text"
-                  value={formData.ticketNumber}
-                  onChange={(e) => setFormData({ ...formData, ticketNumber: e.target.value })}
-                  className="input-field"
-                  required
-                />
+              <div className="bg-blue-50 border border-blue-200 rounded p-3 text-sm text-blue-800">
+                ℹ️ Ticket number will be auto-generated (format: TKT-YYYYMMDD-XXXX)
               </div>
 
               <div>
@@ -231,13 +289,54 @@ export default function TicketsPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-bold mb-2">Weight</label>
-                <input
-                  type="text"
+                <label className="block text-sm font-bold mb-2">Weight (Priority) *</label>
+                <select
                   value={formData.weight}
-                  onChange={(e) => setFormData({ ...formData, weight: e.target.value })}
+                  onChange={(e) => setFormData({ ...formData, weight: parseInt(e.target.value) })}
                   className="input-field"
-                />
+                  required
+                >
+                  <option value={1}>⭐ (Low)</option>
+                  <option value={2}>⭐⭐ (Below Average)</option>
+                  <option value={3}>⭐⭐⭐ (Medium)</option>
+                  <option value={4}>⭐⭐⭐⭐ (High)</option>
+                  <option value={5}>⭐⭐⭐⭐⭐ (Critical)</option>
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  Weight is used to calculate employee scores: score = weight × completion × quality
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold mb-2">
+                  Assign Employees *
+                  <span className="text-gray-500 font-normal ml-2">
+                    (Select 1-5 employees)
+                  </span>
+                </label>
+                <div className="border rounded p-3 max-h-48 overflow-y-auto space-y-2">
+                  {employees.length === 0 ? (
+                    <p className="text-sm text-gray-500">No employees available</p>
+                  ) : (
+                    employees.map((emp) => (
+                      <label key={emp.id} className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-2 rounded">
+                        <input
+                          type="checkbox"
+                          checked={formData.employeeIds.includes(emp.id)}
+                          onChange={() => toggleEmployee(emp.id)}
+                          className="w-4 h-4"
+                        />
+                        <div className="flex-1">
+                          <p className="text-sm font-medium">{emp.fullName}</p>
+                          <p className="text-xs text-gray-500">{emp.email || emp.username}</p>
+                        </div>
+                      </label>
+                    ))
+                  )}
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Selected: {formData.employeeIds.length} / 5
+                </p>
               </div>
 
               <div>
