@@ -4,7 +4,9 @@ import com.gms.enums.TicketStatus;
 import lombok.Builder;
 import lombok.Data;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @Data
 @Builder
@@ -13,7 +15,20 @@ public class SubTicketResponse {
     private String ticketNumber;
     private Long mainTicketId;
     private String mainTicketNumber;
+
+    // Main ticket details (essential for employees to know what work to do)
+    private String mainTicketTitle;
+    private String mainTicketDescription;
+    private LocalDate scheduledDate;
+    private LocalTime scheduledTime;
     private Integer mainTicketWeight; // 1-5 stars
+
+    // Generator information
+    private Long generatorId;
+    private String generatorName;
+    private String generatorModel;
+    private String generatorLocation;
+
     private Long employeeId;
     private String employeeName;
     private String employeeEmail;

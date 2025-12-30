@@ -129,7 +129,18 @@ public class EmployeeTicketController {
             .ticketNumber(subTicket.getTicketNumber())
             .mainTicketId(subTicket.getMainTicket().getId())
             .mainTicketNumber(subTicket.getMainTicket().getTicketNumber())
+            // Main ticket details
+            .mainTicketTitle(subTicket.getMainTicket().getTitle())
+            .mainTicketDescription(subTicket.getMainTicket().getDescription())
+            .scheduledDate(subTicket.getMainTicket().getScheduledDate())
+            .scheduledTime(subTicket.getMainTicket().getScheduledTime())
             .mainTicketWeight(subTicket.getMainTicket().getWeight())
+            // Generator information
+            .generatorId(subTicket.getMainTicket().getGenerator().getId())
+            .generatorName(subTicket.getMainTicket().getGenerator().getName())
+            .generatorModel(subTicket.getMainTicket().getGenerator().getModel())
+            .generatorLocation(subTicket.getMainTicket().getGenerator().getLocationName())
+            // Employee information
             .employeeId(subTicket.getEmployee().getId())
             .employeeName(subTicket.getEmployee().getFullName())
             .employeeEmail(subTicket.getEmployee().getEmail())
