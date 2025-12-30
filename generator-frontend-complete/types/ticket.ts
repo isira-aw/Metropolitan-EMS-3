@@ -1,6 +1,13 @@
 import { Generator } from './generator';
 import { User } from './user';
 
+export type JobCardType =
+  | 'SERVICE'
+  | 'REPAIR'
+  | 'MAINTENANCE'
+  | 'VISIT'
+  | 'EMERGENCY';
+
 export type TicketStatus =
   | 'CREATED'
   | 'ASSIGNED'
@@ -43,6 +50,7 @@ export interface Ticket {
   generatorModel: string;
   title: string;
   description?: string;
+  jobCardType: JobCardType;
   weight: number; // 1-5 stars
   weightDisplay: string; // "*****"
   status: TicketStatus;
@@ -60,6 +68,7 @@ export interface CreateTicketRequest {
   generatorId: number;
   title: string;
   description?: string;
+  jobCardType: JobCardType;
   weight: number; // 1-5
   scheduledDate: string;
   scheduledTime: string;

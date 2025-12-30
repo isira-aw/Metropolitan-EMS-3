@@ -1,5 +1,6 @@
 package com.gms.dto.request;
 
+import com.gms.enums.JobCardType;
 import com.gms.enums.TicketStatus;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -23,6 +24,9 @@ public class MainTicketRequest {
     private String title;
 
     private String description;
+
+    @NotNull(message = "Job card type is required")
+    private JobCardType jobCardType;
 
     @NotNull(message = "Weight is required")
     @jakarta.validation.constraints.Min(value = 1, message = "Weight must be between 1 and 5")

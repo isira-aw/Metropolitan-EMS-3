@@ -1,5 +1,6 @@
 package com.gms.dto.response;
 
+import com.gms.enums.JobCardType;
 import com.gms.enums.TicketStatus;
 import lombok.Builder;
 import lombok.Data;
@@ -19,6 +20,7 @@ public class MainTicketResponse {
     private String generatorModel;
     private String title;
     private String description;
+    private JobCardType jobCardType;
     private Integer weight; // 1-5 stars (* to *****)
     private String weightDisplay; // Display as stars: "*****"
     private TicketStatus status;

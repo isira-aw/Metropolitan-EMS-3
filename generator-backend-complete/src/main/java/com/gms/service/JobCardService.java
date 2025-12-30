@@ -1,5 +1,6 @@
 package com.gms.service;
 
+import com.gms.dto.request.ImageUploadRequest;
 import com.gms.dto.request.StatusUpdateRequest;
 import com.gms.dto.response.GeneratorResponse;
 import com.gms.dto.response.JobCardResponse;
@@ -8,6 +9,7 @@ import com.gms.enums.JobStatus;
 import com.gms.exception.DayNotStartedException;
 import com.gms.exception.InvalidStatusTransitionException;
 import com.gms.exception.ResourceNotFoundException;
+import com.gms.exception.UnauthorizedException;
 import com.gms.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -101,7 +103,36 @@ public class JobCardService {
         
         return mapToResponse(jobCard);
     }
-    
+
+    public JobCardResponse getJobCardById(Long jobCardId, Long employeeId) {
+        MiniJobCard jobCard = jobCardRepository.findById(jobCardId)
+            .orElseThrow(() -> new ResourceNotFoundException("Job card not found"));
+
+        // Verify the job card belongs to the employee
+        if (!jobCard.getEmployee().getId().equals(employeeId)) {
+            throw new UnauthorizedException("You are not authorized to view this job card");
+        }
+
+        return mapToResponse(jobCard);
+    }
+
+    @Transactional
+    public JobCardResponse uploadImage(Long jobCardId, Long employeeId, ImageUploadRequest request) {
+        MiniJobCard jobCard = jobCardRepository.findById(jobCardId)
+            .orElseThrow(() -> new ResourceNotFoundException("Job card not found"));
+
+        // Verify the job card belongs to the employee
+        if (!jobCard.getEmployee().getId().equals(employeeId)) {
+            throw new UnauthorizedException("You are not authorized to upload images for this job card");
+        }
+
+        // Store the base64 image data
+        jobCard.setImage(request.getImageData());
+        jobCardRepository.save(jobCard);
+
+        return mapToResponse(jobCard);
+    }
+
     private JobCardResponse mapToResponse(MiniJobCard jobCard) {
         Generator gen = jobCard.getMainTicket().getGenerator();
         

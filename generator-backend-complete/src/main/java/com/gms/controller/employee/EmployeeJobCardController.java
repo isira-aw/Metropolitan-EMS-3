@@ -1,5 +1,6 @@
 package com.gms.controller.employee;
 
+import com.gms.dto.request.ImageUploadRequest;
 import com.gms.dto.request.StatusUpdateRequest;
 import com.gms.dto.response.JobCardResponse;
 import com.gms.enums.JobStatus;
@@ -43,6 +44,27 @@ public class EmployeeJobCardController {
     ) {
         return ResponseEntity.ok(
             jobCardService.updateStatus(id, userPrincipal.getId(), request)
+        );
+    }
+
+    @PostMapping("/{id}/image")
+    public ResponseEntity<JobCardResponse> uploadImage(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserPrincipal userPrincipal,
+            @Valid @RequestBody ImageUploadRequest request
+    ) {
+        return ResponseEntity.ok(
+            jobCardService.uploadImage(id, userPrincipal.getId(), request)
+        );
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<JobCardResponse> getJobCardById(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserPrincipal userPrincipal
+    ) {
+        return ResponseEntity.ok(
+            jobCardService.getJobCardById(id, userPrincipal.getId())
         );
     }
 }

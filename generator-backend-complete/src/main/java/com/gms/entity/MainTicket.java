@@ -1,5 +1,6 @@
 package com.gms.entity;
 
+import com.gms.enums.JobCardType;
 import com.gms.enums.TicketStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -41,9 +42,14 @@ public class MainTicket {
     @NotBlank(message = "Title is required")
     @Column(nullable = false, length = 200)
     private String title;
-    
+
     @Column(columnDefinition = "TEXT")
     private String description;
+
+    @NotNull(message = "Job card type is required")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "job_card_type", nullable = false, length = 20)
+    private JobCardType jobCardType;
 
     @NotNull(message = "Weight is required")
     @Column(nullable = false)

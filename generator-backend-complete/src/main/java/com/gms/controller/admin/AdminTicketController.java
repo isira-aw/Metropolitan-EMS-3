@@ -109,6 +109,7 @@ public class AdminTicketController {
             .generator(generator)
             .title(request.getTitle())
             .description(request.getDescription())
+            .jobCardType(request.getJobCardType())
             .weight(request.getWeight())
             .status(TicketStatus.ASSIGNED)  // Set to ASSIGNED since we're assigning employees
             .scheduledDate(request.getScheduledDate())
@@ -164,6 +165,7 @@ public class AdminTicketController {
         ticket.setGenerator(generator);
         ticket.setTitle(request.getTitle());
         ticket.setDescription(request.getDescription());
+        ticket.setJobCardType(request.getJobCardType());
         ticket.setWeight(request.getWeight());
         ticket.setScheduledDate(request.getScheduledDate());
         ticket.setScheduledTime(request.getScheduledTime());
@@ -259,6 +261,7 @@ public class AdminTicketController {
             .generatorModel(ticket.getGenerator().getModel())
             .title(ticket.getTitle())
             .description(ticket.getDescription())
+            .jobCardType(ticket.getJobCardType())
             .weight(ticket.getWeight())
             .weightDisplay(convertWeightToStars(ticket.getWeight()))
             .status(ticket.getStatus())

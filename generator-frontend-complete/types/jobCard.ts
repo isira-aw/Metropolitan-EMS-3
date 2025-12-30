@@ -29,3 +29,9 @@ export interface DayStatus {
   dayStartTime?: string;
   dayEndTime?: string;
 }
+
+export interface ImageUploadRequest {
+  imageData: string; // Base64 encoded image
+  fileName?: string;
+  contentType?: string;
+}
