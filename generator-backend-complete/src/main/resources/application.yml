@@ -1,0 +1,67 @@
+spring:
+  application:
+    name: generator-management-system
+  
+  datasource:
+    url: jdbc:postgresql://localhost:5432/generator_ms
+    username: postgres
+    password: password
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        jdbc:
+          time_zone: Asia/Colombo
+    open-in-view: false
+  
+  jackson:
+    time-zone: Asia/Colombo
+    serialization:
+      write-dates-as-timestamps: false
+
+server:
+  port: 8080
+  error:
+    include-message: always
+    include-binding-errors: always
+
+# JWT Configuration - Must be at least 64 characters for HS512
+jwt:
+  secret: aVeryLongSecretKeyThatIsAtLeast64CharactersLongForHS512AlgorithmSecurityPurposes123456789
+  access-token-expiration: 900000
+  refresh-token-expiration: 604800000
+
+# Timezone
+app:
+  timezone: Asia/Colombo
+  
+# Pagination defaults
+pagination:
+  default-page-size: 10
+  max-page-size: 100
+
+# Business Rules
+business:
+  work-start-time: "08:30:00"
+  work-end-time: "17:30:00"
+  max-employees-per-ticket: 5
+  min-employees-per-ticket: 1
+  report-max-days: 90
+
+logging:
+  level:
+    root: INFO
+    com.gms: DEBUG
+    org.springframework.security: DEBUG
